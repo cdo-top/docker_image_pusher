@@ -7,3 +7,13 @@ minio/minio:latest
 node:26-alpine
 postgres:18-alpine
 nginx:1.30-alpine
+
+--platform=linux/arm64 ghcr.io/astral-sh/uv:latest
+--platform=linux/arm64 pgvector/pgvector:pg18
+--platform=linux/arm64 python:3.14-slim
+--platform=linux/arm64 glitchtip/glitchtip:latest
+--platform=linux/arm64 redis:8-alpine
+--platform=linux/arm64 minio/minio:latest
+--platform=linux/arm64 node:26-alpine
+--platform=linux/arm64 postgres:18-alpine
+--platform=linux/arm64 nginx:1.30-alpine
