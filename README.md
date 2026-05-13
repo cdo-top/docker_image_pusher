@@ -4,6 +4,7 @@
 - 支持DockerHub, gcr.io, k8s.io, ghcr.io等任意仓库<br>
 - 支持最大40GB的大型镜像<br>
 - 使用阿里云的官方线路，速度快<br>
+- 默认自动推送 linux/amd64 和 linux/arm64 双架构，并合并为多架构 manifest<br>
 
 视频教程：https://www.bilibili.com/video/BV1Zn4y19743/
 
@@ -41,7 +42,7 @@ ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER，ALIYUN_REGISTRY_PASSWORD，ALIYUN_REGIS
 ### 添加镜像
 打开images.txt文件，添加你想要的镜像 
 可以加tag，也可以不用(默认latest)<br>
-可添加 --platform=xxxxx 的参数指定镜像架构<br>
+每个镜像默认自动拉取并推送 linux/amd64 和 linux/arm64 两种架构，并合并为多架构 manifest<br>
 可使用 k8s.gcr.io/kube-state-metrics/kube-state-metrics 格式指定私库<br>
 可使用 #开头作为注释<br>
 ![](doc/images.png)
@@ -60,9 +61,19 @@ shrimp-images 即 ALIYUN_NAME_SPACE(阿里云命名空间)<br>
 alpine 即 阿里云中显示的镜像名<br>
 
 ### 多架构
-需要在images.txt中用 --platform=xxxxx手动指定镜像架构
-指定后的架构会以前缀的形式放在镜像名字前面
-![](doc/多架构.png)
+默认自动支持 linux/amd64 和 linux/arm64 双架构，无需在 images.txt 中手动指定。
+
+每个镜像推送后会自动创建多架构 manifest list，拉取时 Docker 客户端自动选择匹配本机架构的镜像：
+```
+nginx:1.25.3          ← manifest list（自动选择架构）
+├── nginx:1.25.3-linux-amd64
+└── nginx:1.25.3-linux-arm64
+```
+
+如需修改支持的架构，编辑 `.github/workflows/docker.yaml` 中的以下配置：
+```bash
+platforms=("linux/amd64" "linux/arm64")
+```
 
 ### 镜像重名
 程序自动判断是否存在名称相同, 但是属于不同命名空间的情况。
