@@ -7,3 +7,4 @@ minio/minio:latest
 node:26-alpine
 postgres:18-alpine
 nginx:stable-alpine
+neilpang/acme.sh:latest
