@@ -3,7 +3,7 @@ pgvector/pgvector:pg18
 python:3.14-slim
 glitchtip/glitchtip:latest
 redis:8-alpine
-minio/minio:latest
+# minio/minio:latest
 node:26-alpine
 postgres:18-alpine
 nginx:stable-alpine
