@@ -50,7 +50,7 @@ ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER，ALIYUN_REGISTRY_PASSWORD，ALIYUN_REGIS
 
 每次执行会先比较源仓库和阿里云目标仓库的镜像元数据，仅拉取、推送新增或内容发生变化的镜像。目标镜像内容相同则跳过，不重复下载镜像层；`latest` 等标签的上游更新也会被检测到。首次执行时，目标仓库已有且内容相同的镜像同样会跳过。检查失败（例如网络或认证错误）会终止任务，避免误判为无需更新。
 
-比较脚本使用 Bash、Docker Buildx 和 `jq`，不依赖 Python。
+比较脚本使用 Bash、Docker Buildx、`jq` 和 GNU `timeout`（GitHub Ubuntu runner 提供），不依赖 Python。按架构比较目标 `-linux-amd64`、`-linux-arm64` 标签的 config 和 layers，忽略索引 variant 元数据差异；未变化的架构不拉取推送。每次元数据请求默认最多等待 60 秒，可通过 `MANIFEST_TIMEOUT_SECONDS` 调整。日志会记录正在检查的镜像及比较结果。
 
 ### 使用镜像
 回到阿里云，镜像仓库，点击任意镜像，可查看镜像状态。(可以改成公开，拉取镜像免登录)

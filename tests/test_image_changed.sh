@@ -8,13 +8,15 @@ inspect_manifest() {
             if [[ "$scenario" == single ]]; then
                 echo '{"config":{"digest":"config"},"layers":[{"digest":"layer"}]}'
             else
-                echo '{"manifests":[{"digest":"source","platform":{"os":"linux","architecture":"amd64"}}]}'
+                echo '{"manifests":[{"digest":"source","platform":{"os":"linux","architecture":"amd64","variant":"v1"}}]}'
             fi ;;
         target:latest)
             case "$scenario" in
                 missing) echo 'manifest unknown' >&2; return 1 ;;
                 auth) echo 'unauthorized' >&2; return 1 ;;
                 network) echo 'connection refused' >&2; return 1 ;;
+                timeout) echo 'request timed out' >&2; return 124 ;;
+                target_single) echo '{"config":{"digest":"config"},"layers":[{"digest":"layer"}]}' ;;
                 *) echo '{"manifests":[{"digest":"target","platform":{"os":"linux","architecture":"amd64"}}]}' ;;
             esac ;;
         source:latest@source)
@@ -46,3 +48,5 @@ check missing 1
 check auth 2
 check network 2
 check single 0
+check target_single 0
+check timeout 2

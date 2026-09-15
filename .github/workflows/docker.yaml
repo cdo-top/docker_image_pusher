@@ -109,31 +109,34 @@ jobs:
 
             base_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${name_space_prefix}${_image_name_tag}"
 
-            # Only registry metadata is fetched here; unchanged layers are not pulled.
-            if bash scripts/image_changed.sh "$_image" "$base_image" "${platforms[@]}"; then
-                echo ">>> unchanged, skip: $_image -> $base_image"
-                continue
-            else
-                comparison_status=$?
-                if [[ "$comparison_status" -ne 1 ]]; then
-                    exit "$comparison_status"
-                fi
-            fi
+            platform_tags=""
+            image_updated=false
 
             # 对每个架构分别拉取、打 tag、推送
             for platform in "${platforms[@]}"; do
                 new_image="${base_image}-${platform//\//-}"
+                platform_tags="$platform_tags $new_image"
+                # Compare each architecture tag, not index variant metadata.
+                if bash scripts/image_changed.sh "$_image" "$new_image" "$platform"; then
+                    echo ">>> unchanged, skip: $platform $_image"
+                    continue
+                else
+                    comparison_status=$?
+                    if [[ "$comparison_status" -ne 1 ]]; then
+                        exit "$comparison_status"
+                    fi
+                fi
+                image_updated=true
                 echo ">>> pull --platform $platform $_image"
                 # 通过 digest 区分不同架构，避免同名 tag 互相覆盖
                 digest=$(docker pull --platform "$platform" "$_image" | grep "Digest:" | awk '{print $2}')
                 if [[ -z "$digest" ]]; then
-                    echo "ERROR: 获取 $_image ($platform) digest 失败，跳过"
-                    continue
+                    echo "ERROR: 获取 $_image ($platform) digest 失败"
+                    exit 1
                 fi
                 docker tag "${_image}@${digest}" "$new_image"
                 echo ">>> push $new_image"
                 docker push "$new_image"
-                image_platform_tags[$base_image]="${image_platform_tags[$base_image]} $new_image"
                 echo "=============================================================================="
                 df -hT
                 echo "=============================================================================="
@@ -142,6 +145,24 @@ jobs:
                 df -hT
                 echo "=============================================================================="
             done
+
+            # Recover an absent/stale index after an interrupted earlier run.
+            if [[ "$image_updated" == false ]]; then
+                if bash scripts/image_changed.sh "$_image" "$base_image" "${platforms[@]}"; then
+                    echo ">>> index unchanged, skip: $base_image"
+                else
+                    comparison_status=$?
+                    if [[ "$comparison_status" -ne 1 ]]; then
+                        exit "$comparison_status"
+                    fi
+                    image_updated=true
+                fi
+            fi
+
+            # Include unchanged architecture tags when rebuilding the index.
+            if [[ "$image_updated" == true ]]; then
+                image_platform_tags[$base_image]="$platform_tags"
+            fi
 
         done < images.txt
 
