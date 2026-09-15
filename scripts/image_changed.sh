@@ -2,7 +2,6 @@
 
 # Exit codes: 0 unchanged, 1 changed/missing, 2 inspection failure.
 inspect_manifest() {
-    echo ">>> inspect: $1" >&2
     timeout --kill-after=5s "${MANIFEST_TIMEOUT_SECONDS:-60}s" \
         docker buildx imagetools inspect --raw "$1"
 }
@@ -27,6 +26,7 @@ platform_contents() {
             $platforms | index($name)) |
             {digest, platform: (.platform.os + "/" + .platform.architecture)}]' <<< "$manifest") || return 2
     while IFS= read -r entry; do
+        echo ">>> inspect platform manifest: $reference $(jq -r '.platform' <<< "$entry")" >&2
         child=$(inspect_manifest "${reference%%@*}@$(jq -r '.digest' <<< "$entry")") || return 2
         signature=$(content_signature <<< "$child") || return 2
         contents=$(jq -c --argjson entry "$entry" --argjson content "$signature" \
@@ -40,6 +40,7 @@ image_changed() {
     shift 2
     local platforms source_manifest target_manifest source_contents target_contents
     platforms=$(jq -cn --args '$ARGS.positional' "$@") || return 2
+    echo ">>> inspect source: $source" >&2
     source_manifest=$(inspect_manifest "$source") || {
         echo "ERROR: Source inspection failed or timed out: $source" >&2
         return 2
@@ -49,6 +50,7 @@ image_changed() {
         echo "ERROR: No requested platforms found in $source" >&2
         return 2
     fi
+    echo ">>> inspect target: $target" >&2
     if ! target_manifest=$(inspect_manifest "$target" 2>&1); then
         if grep -Eqi 'manifest unknown|name unknown|404 Not Found' <<< "$target_manifest"; then
             echo ">>> target missing: $target" >&2

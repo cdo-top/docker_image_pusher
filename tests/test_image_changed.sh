@@ -50,3 +50,14 @@ check network 2
 check single 0
 check target_single 0
 check timeout 2
+
+# Exercise the real inspection wrapper: diagnostic logs must not enter JSON.
+source "$(dirname "$0")/../scripts/image_changed.sh"
+timeout() {
+    shift 2
+    "$@"
+}
+docker() {
+    echo '{"config":{"digest":"config"},"layers":[{"digest":"layer"}]}'
+}
+check wrapper_json 0
