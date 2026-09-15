@@ -57,6 +57,7 @@ jobs:
 
     - name: Build and push image Aliyun
       run: |
+        set -eo pipefail
         echo "$ALIYUN_REGISTRY_PASSWORD" | docker login -u "$ALIYUN_REGISTRY_USER" --password-stdin "$ALIYUN_REGISTRY"
 
         # 默认推送的架构列表
@@ -65,7 +66,7 @@ jobs:
         # 解析镜像名各部分，结果存入全局变量 _image _image_name_tag _name_space _image_name
         parse_image_info() {
             local raw="${1%%@*}"
-            _image="$raw"
+            _image="$1"
             _image_name_tag=$(echo "$raw" | awk -F'/' '{print $NF}')
             _name_space=$(echo "$raw" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
             _image_name=$(echo "$_image_name_tag" | awk -F':' '{print $1}')
@@ -76,7 +77,7 @@ jobs:
         declare -A temp_map
         while IFS= read -r line || [ -n "$line" ]; do
             [[ -z "$line" ]] && continue
-            [[ "$line" =~ ^\s*# ]] && continue
+            [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
 
             parse_image_info "$(echo "$line" | awk '{print $NF}')"
             # 用 name_space_ 作为 map key 以区分空命名空间
@@ -96,7 +97,7 @@ jobs:
         declare -A image_platform_tags
         while IFS= read -r line || [ -n "$line" ]; do
             [[ -z "$line" ]] && continue
-            [[ "$line" =~ ^\s*# ]] && continue
+            [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
 
             parse_image_info "$(echo "$line" | awk '{print $NF}')"
 
@@ -107,6 +108,17 @@ jobs:
             fi
 
             base_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${name_space_prefix}${_image_name_tag}"
+
+            # Only registry metadata is fetched here; unchanged layers are not pulled.
+            if bash scripts/image_changed.sh "$_image" "$base_image" "${platforms[@]}"; then
+                echo ">>> unchanged, skip: $_image -> $base_image"
+                continue
+            else
+                comparison_status=$?
+                if [[ "$comparison_status" -ne 1 ]]; then
+                    exit "$comparison_status"
+                fi
+            fi
 
             # 对每个架构分别拉取、打 tag、推送
             for platform in "${platforms[@]}"; do

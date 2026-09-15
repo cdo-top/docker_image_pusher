@@ -48,6 +48,10 @@ ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER，ALIYUN_REGISTRY_PASSWORD，ALIYUN_REGIS
 ![](doc/images.png)
 文件提交后，自动进入Github Action构建
 
+每次执行会先比较源仓库和阿里云目标仓库的镜像元数据，仅拉取、推送新增或内容发生变化的镜像。目标镜像内容相同则跳过，不重复下载镜像层；`latest` 等标签的上游更新也会被检测到。首次执行时，目标仓库已有且内容相同的镜像同样会跳过。检查失败（例如网络或认证错误）会终止任务，避免误判为无需更新。
+
+比较脚本使用 Bash、Docker Buildx 和 `jq`，不依赖 Python。
+
 ### 使用镜像
 回到阿里云，镜像仓库，点击任意镜像，可查看镜像状态。(可以改成公开，拉取镜像免登录)
 ![](doc/开始使用.png)
