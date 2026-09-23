@@ -90,7 +90,7 @@ xiaoyaliu/alist
 ![](doc/镜像重名.png)
 
 ### 定时执行
-当前 workflow 默认每 6 小时执行一次上游检查，也可通过 Actions 页面手动执行。定时表达式使用 UTC 时区：
+当前 workflow 默认每 6 小时检查一次订阅镜像 `ghcr.io/wei-shaw/sub2api:0.2.8`，也可通过 Actions 页面手动执行。代码 push 和手动执行仍处理 `images.txt` 中的完整列表。定时表达式使用 UTC 时区：
 ```yaml
 schedule:
   - cron: '17 */6 * * *'

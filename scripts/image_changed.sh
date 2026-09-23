@@ -2,8 +2,22 @@
 
 # Exit codes: 0 unchanged, 1 changed/missing, 2 inspection failure.
 inspect_manifest() {
-    timeout --kill-after=5s "${MANIFEST_TIMEOUT_SECONDS:-60}s" \
-        docker buildx imagetools inspect --raw "$1"
+    local reference="$1" cache_file=""
+    if [[ -n "${MANIFEST_CACHE_DIR:-}" ]]; then
+        mkdir -p "$MANIFEST_CACHE_DIR"
+        cache_file="$MANIFEST_CACHE_DIR/$(printf '%s' "$reference" | sha256sum | awk '{print $1}').json"
+        if [[ -s "$cache_file" ]]; then
+            cat "$cache_file"
+            return
+        fi
+    fi
+    local manifest
+    manifest=$(timeout --kill-after=5s "${MANIFEST_TIMEOUT_SECONDS:-60}s" \
+        docker buildx imagetools inspect --raw "$reference") || return
+    if [[ -n "$cache_file" ]]; then
+        printf '%s' "$manifest" > "$cache_file"
+    fi
+    printf '%s\n' "$manifest"
 }
 
 content_signature() {

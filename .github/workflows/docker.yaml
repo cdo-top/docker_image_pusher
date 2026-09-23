@@ -68,6 +68,14 @@ jobs:
 
         # 默认推送的架构列表
         platforms=("linux/amd64" "linux/arm64")
+        export MANIFEST_CACHE_DIR="$RUNNER_TEMP/image-manifest-cache"
+
+        # 定时任务只订阅需要持续检查的镜像；push 和手动任务处理完整列表。
+        images_file="images.txt"
+        if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            images_file="$RUNNER_TEMP/scheduled-images.txt"
+            printf '%s\n' 'ghcr.io/wei-shaw/sub2api:0.2.8' > "$images_file"
+        fi
 
         # 解析镜像名各部分，结果存入全局变量 _image _image_name_tag _name_space _image_name
         parse_image_info() {
@@ -97,7 +105,7 @@ jobs:
             else
                 temp_map[$_image_name]="$name_space_key"
             fi
-        done < images.txt
+        done < "$images_file"
 
         # 第二遍：拉取、打 tag、推送
         declare -A image_platform_tags
@@ -152,25 +160,12 @@ jobs:
                 echo "=============================================================================="
             done
 
-            # Recover an absent/stale index after an interrupted earlier run.
-            if [[ "$image_updated" == false ]]; then
-                if bash scripts/image_changed.sh "$_image" "$base_image" "${platforms[@]}"; then
-                    echo ">>> index unchanged, skip: $base_image"
-                else
-                    comparison_status=$?
-                    if [[ "$comparison_status" -ne 1 ]]; then
-                        exit "$comparison_status"
-                    fi
-                    image_updated=true
-                fi
-            fi
-
             # Include unchanged architecture tags when rebuilding the index.
             if [[ "$image_updated" == true ]]; then
                 image_platform_tags[$base_image]="$platform_tags"
             fi
 
-        done < images.txt
+        done < "$images_file"
 
         # 合并各架构为 manifest list，统一到同一个 tag
         for base_image in "${!image_platform_tags[@]}"; do
