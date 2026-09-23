@@ -13,6 +13,7 @@ inspect_manifest() {
         target:latest)
             case "$scenario" in
                 missing) echo 'manifest unknown' >&2; return 1 ;;
+                aliyun_missing) echo 'ERROR: registry.example/sub2api:0.2.8-linux-amd64: not found' >&2; return 1 ;;
                 auth) echo 'unauthorized' >&2; return 1 ;;
                 network) echo 'connection refused' >&2; return 1 ;;
                 timeout) echo 'request timed out' >&2; return 124 ;;
@@ -45,6 +46,7 @@ check unchanged 0
 check config 1
 check layers 1
 check missing 1
+check aliyun_missing 1
 check auth 2
 check network 2
 check single 0

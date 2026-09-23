@@ -74,7 +74,7 @@ jobs:
         images_file="images.txt"
         if [[ "${{ github.event_name }}" == "schedule" ]]; then
             images_file="$RUNNER_TEMP/scheduled-images.txt"
-            printf '%s\n' 'ghcr.io/wei-shaw/sub2api:0.2.8' > "$images_file"
+            printf '%s\n' 'weishaw/sub2api:0.2.8' > "$images_file"
         fi
 
         # 解析镜像名各部分，结果存入全局变量 _image _image_name_tag _name_space _image_name

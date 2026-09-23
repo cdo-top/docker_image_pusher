@@ -8,4 +8,4 @@ node:26-alpine
 postgres:18-alpine
 nginx:stable-alpine
 neilpang/acme.sh:latest
-ghcr.io/wei-shaw/sub2api:0.2.8
+weishaw/sub2api:0.2.8

@@ -66,7 +66,7 @@ image_changed() {
     fi
     echo ">>> inspect target: $target" >&2
     if ! target_manifest=$(inspect_manifest "$target" 2>&1); then
-        if grep -Eqi 'manifest unknown|name unknown|404 Not Found' <<< "$target_manifest"; then
+        if grep -Eqi 'manifest unknown|name unknown|404 Not Found|: not found([[:space:]]|$)' <<< "$target_manifest"; then
             echo ">>> target missing: $target" >&2
             return 1
         fi
