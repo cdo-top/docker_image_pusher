@@ -2,9 +2,15 @@ name: Docker
 
 on:
   workflow_dispatch:
+  schedule:
+    # Every 6 hours. GitHub Actions cron uses UTC.
+    - cron: '17 */6 * * *'
   push:
     branches: [ main ]
 
+concurrency:
+  group: docker-image-sync
+  cancel-in-progress: false
 
 env:
   ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"

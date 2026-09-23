@@ -90,6 +90,10 @@ xiaoyaliu/alist
 ![](doc/镜像重名.png)
 
 ### 定时执行
-修改/.github/workflows/docker.yaml文件
-添加 schedule即可定时执行(此处cron使用UTC时区)
+当前 workflow 默认每 6 小时执行一次上游检查，也可通过 Actions 页面手动执行。定时表达式使用 UTC 时区：
+```yaml
+schedule:
+  - cron: '17 */6 * * *'
+```
+脚本只会拉取、推送新增或内容发生变化的镜像；即使标签名不变（例如 `latest` 或固定版本标签被重新发布），内容变化也会被检测到。修改 `.github/workflows/docker.yaml` 中的 `schedule` 可调整执行频率。
 ![](doc/定时执行.png)
