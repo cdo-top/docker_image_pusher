@@ -5,6 +5,7 @@ glitchtip/glitchtip:latest
 redis:8-alpine
 # minio/minio:latest
 node:26-alpine
+node:24-bookworm-slim
 postgres:18-alpine
 nginx:stable-alpine
 neilpang/acme.sh:latest
