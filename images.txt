@@ -12,3 +12,5 @@ neilpang/acme.sh:latest
 weishaw/sub2api:0.2.8
 postgres:16-alpine
 weishaw/sub2api:0.2.4
+golang:1.27-alpine
+alpine:3.22
