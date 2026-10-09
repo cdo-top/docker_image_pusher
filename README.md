@@ -89,11 +89,5 @@ xiaoyaliu/alist
 ```
 ![](doc/镜像重名.png)
 
-### 定时执行
-当前 workflow 默认每 6 小时检查一次订阅镜像 `weishaw/sub2api:0.2.14`，也可通过 Actions 页面手动执行。代码 push 和手动执行仍处理 `images.txt` 中的完整列表。定时表达式使用 UTC 时区：
-```yaml
-schedule:
-  - cron: '17 */6 * * *'
-```
-脚本只会拉取、推送新增或内容发生变化的镜像；即使标签名不变（例如 `latest` 或固定版本标签被重新发布），内容变化也会被检测到。修改 `.github/workflows/docker.yaml` 中的 `schedule` 可调整执行频率。
-![](doc/定时执行.png)
+### 触发方式
+代码 push 到 `main` 或在 Actions 页面手动执行时，处理 `images.txt` 中的完整列表。不设定时任务：镜像使用固定版本标签，重新拉取内容不变；需要新版本时在 `images.txt` 中新增一行。脚本只会拉取、推送新增或内容发生变化的镜像。
